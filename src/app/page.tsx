@@ -26,7 +26,7 @@ export default async function Home() {
               Sri Lanka Learning Support Network
             </p>
             <h1 className="text-4xl font-semibold leading-tight">
-              Access and share quality study material — without paywalls.
+              Access and share quality study material without paywalls.
             </h1>
             <p className="text-lg text-white/90">
               EduRelief combines Next.js, Firebase, and GitHub storage so every
