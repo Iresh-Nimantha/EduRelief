@@ -107,6 +107,18 @@ export async function deleteNote(id: string, userId: string) {
   return mapNote(doc);
 }
 
+export async function deleteNoteAsAdmin(id: string) {
+  const docRef = notesCollection.doc(id);
+  const doc = await docRef.get();
+
+  if (!doc.exists) {
+    throw new Error("Note not found");
+  }
+
+  await docRef.delete();
+  return mapNote(doc);
+}
+
 function mapNote(
   doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>
 ): Note {
