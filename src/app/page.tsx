@@ -29,10 +29,8 @@ export default async function Home() {
               Access and share quality study material without paywalls.
             </h1>
             <p className="text-lg text-white/90">
-              EduRelief combines Next.js, Firebase, and GitHub storage so every
-              student can browse, search, and download notes freely. Uploaders
-              use secure Firebase Auth and GitHub Access Tokens handled only on
-              the server.
+              EduRelief is a community-driven learning platform where students can easily browse, search, upload, and download study notes. It ensures safe sharing, reliable access to materials, and a supportive space for students who need resources during school closures or emergencies.
+
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
