@@ -12,8 +12,7 @@ export default function UploadPage() {
           Share your learning resources
         </h1>
         <p className="text-lg text-zinc-600">
-          Uploads are protected by Firebase Auth. Files are committed to GitHub
-          with a server-side Access Token and never exposed to guests.
+          Your uploads are securely handled and never exposed to anyone except you and the students who access them.
         </p>
       </header>
 
