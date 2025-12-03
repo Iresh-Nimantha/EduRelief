@@ -3,6 +3,7 @@ import { adminDb } from "./firebase/admin";
 import { Note, NoteInput } from "@/types/note";
 import { UserProfile, UserRole } from "@/types/user";
 import { isFirebaseIamMember } from "./firebase-iam";
+import { deleteFileFromGitHub } from "./github";
 
 const notesCollection = adminDb.collection("notes");
 const usersCollection = adminDb.collection("users");
@@ -108,6 +109,15 @@ export async function deleteNote(id: string, userId: string) {
     throw new Error("You can only delete your own note");
   }
 
+  // Delete the file from GitHub first so we don't leave orphans
+  const filePath = data?.filePath as string | undefined;
+  if (filePath) {
+    await deleteFileFromGitHub({
+      path: filePath,
+      message: `chore(notes): delete ${data.title ?? "note"}`,
+    });
+  }
+
   await docRef.delete();
   return mapNote(doc);
 }
@@ -118,6 +128,17 @@ export async function deleteNoteAsAdmin(id: string) {
 
   if (!doc.exists) {
     throw new Error("Note not found");
+  }
+
+  const data = doc.data();
+
+  // Delete the file from GitHub first so we don't leave orphans
+  const filePath = data?.filePath as string | undefined;
+  if (filePath) {
+    await deleteFileFromGitHub({
+      path: filePath,
+      message: `chore(notes): admin delete ${data?.title ?? "note"}`,
+    });
   }
 
   await docRef.delete();
