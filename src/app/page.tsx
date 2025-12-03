@@ -5,7 +5,6 @@ import { SubjectsSection } from "@/components/layout/SubjectsSection";
 
 export default async function Home() {
   const notes = await listNotes();
-  const featured = notes.slice(0, 6);
 
   return (
     <div className="flex flex-col">
@@ -80,7 +79,7 @@ export default async function Home() {
           </Link>
         </header>
 
-        <NoteGrid notes={featured} />
+        <NoteGrid notes={notes} limit={2} />
         {/* Subjects Section */}
         <SubjectsSection />
       </section>

@@ -20,10 +20,7 @@ export async function listNotes(filters?: {
     filters?.grade || filters?.subject || filters?.uploaderId
   );
 
-  if (!hasCollectionFilters) {
-    query = query.orderBy("uploadedAt", "desc");
-  }
-
+  // Apply filters if provided
   if (filters?.grade) {
     query = query.where("grade", "==", filters.grade);
   }
@@ -36,9 +33,16 @@ export async function listNotes(filters?: {
     query = query.where("uploaderId", "==", filters.uploaderId);
   }
 
+  // Order by uploadedAt - if no filters, this will return all notes ordered by date
+  // If filters are present, we'll sort in memory after fetching
+  if (!hasCollectionFilters) {
+    query = query.orderBy("uploadedAt", "desc");
+  }
+
   const snapshot = await query.get();
   let notes = snapshot.docs.map(mapNote);
 
+  // Sort in memory if we used collection filters (since we can't combine where + orderBy easily)
   if (hasCollectionFilters) {
     notes = notes.sort(
       (a, b) =>
@@ -46,6 +50,7 @@ export async function listNotes(filters?: {
     );
   }
 
+  // Apply search term filter if provided
   if (filters?.searchTerm) {
     const term = filters.searchTerm.toLowerCase();
     return notes.filter(
