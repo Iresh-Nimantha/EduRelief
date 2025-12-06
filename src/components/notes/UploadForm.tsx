@@ -150,6 +150,8 @@ export function UploadForm() {
       formData.append("subject", values.subject);
       formData.append("file", file);
 
+      console.log("Upload attempt - Sending request with Authorization header");
+      
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: {
@@ -158,14 +160,29 @@ export function UploadForm() {
         body: formData,
       });
 
+      console.log("Upload response status:", response.status, response.statusText);
+
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
+        const body = await response.json().catch(async (parseError) => {
+          console.error("Failed to parse error response:", parseError);
+          // Try to get text response instead
+          const text = await response.text().catch(() => "");
+          console.error("Error response text:", text);
+          return { error: text || `Upload failed with status ${response.status}` };
+        });
+        
         const errorMessage = body.error ?? `Upload failed with status ${response.status}`;
+        console.error("Upload error details:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          body: body,
+        });
         
         // Provide more specific error messages
         if (response.status === 403) {
           throw new Error(
-            errorMessage.includes("Authentication") 
+            errorMessage.includes("Authentication") || errorMessage.includes("required")
               ? errorMessage 
               : "Authentication failed. Please log out and log in again, then try uploading."
           );
