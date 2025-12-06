@@ -10,13 +10,28 @@ import { createNote } from "@/lib/firestore";
 
 export const runtime = "nodejs";
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
+  // Ensure we always return JSON, even for errors
   try {
     const authHeader = request.headers.get("authorization");
     
     // Log for debugging (remove in production if needed)
+    console.log("Upload request received");
     console.log("Upload request - Auth header present:", !!authHeader);
     console.log("Upload request - Auth header starts with Bearer:", authHeader?.startsWith("Bearer "));
+    console.log("Upload request - Content-Type:", request.headers.get("content-type"));
     
     // Verify authentication first - return 403 for auth errors
     let user;
@@ -25,15 +40,31 @@ export async function POST(request: NextRequest) {
         console.error("Upload error: No authorization header provided");
         return NextResponse.json(
           { error: "Authentication required. Please log in and try again." },
-          { status: 403 }
+          { 
+            status: 403,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
       }
       
-      user = await verifyIdToken(authHeader);
-      console.log("Upload request - User authenticated:", user.uid);
-    } catch (authError) {
+      // Verify Firebase Admin is initialized
+      try {
+        user = await verifyIdToken(authHeader);
+        console.log("Upload request - User authenticated:", user.uid);
+      } catch (verifyError: any) {
+        console.error("Token verification failed:", {
+          error: verifyError?.message,
+          code: verifyError?.code,
+          stack: verifyError?.stack,
+        });
+        throw verifyError;
+      }
+    } catch (authError: any) {
       console.error("Auth error details:", {
         error: authError instanceof Error ? authError.message : String(authError),
+        code: authError?.code,
         hasAuthHeader: !!authHeader,
         authHeaderPrefix: authHeader?.substring(0, 20),
       });
@@ -43,7 +74,12 @@ export async function POST(request: NextRequest) {
             ? authError.message 
             : "Authentication failed. Please log in again.",
         },
-        { status: 403 }
+        { 
+          status: 403,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
