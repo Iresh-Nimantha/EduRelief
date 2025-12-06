@@ -9,13 +9,33 @@ export async function verifyIdToken(
   }
 
   const idToken = authHeader.replace("Bearer ", "").trim();
-  const decoded = await adminAuth.verifyIdToken(idToken);
+  
+  if (!idToken || idToken.length === 0) {
+    throw new Error("Invalid token: token is empty");
+  }
 
-  return {
-    uid: decoded.uid,
-    name: decoded.name ?? decoded.email,
-    email: decoded.email,
-  };
+  try {
+    const decoded = await adminAuth.verifyIdToken(idToken, true); // Check revoked tokens
+    
+    return {
+      uid: decoded.uid,
+      name: decoded.name ?? decoded.email,
+      email: decoded.email,
+    };
+  } catch (error: any) {
+    // Provide more specific error messages
+    if (error?.code === "auth/id-token-expired") {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+    if (error?.code === "auth/id-token-revoked") {
+      throw new Error("Your session has been revoked. Please log in again.");
+    }
+    if (error?.code === "auth/argument-error") {
+      throw new Error("Invalid authentication token. Please log in again.");
+    }
+    // Re-throw with original message if it's a known error format
+    throw new Error(error?.message || "Authentication failed. Please log in again.");
+  }
 }
 
 /**

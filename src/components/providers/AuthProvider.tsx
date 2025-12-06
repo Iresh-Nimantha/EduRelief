@@ -94,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       getToken: async () => {
         if (!firebaseAuth.currentUser) return null;
-        return firebaseAuth.currentUser.getIdToken();
+        // Force refresh to ensure we have a valid token
+        return firebaseAuth.currentUser.getIdToken(true);
       },
     }),
     [user, userRole, loading]

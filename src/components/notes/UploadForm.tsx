@@ -8,9 +8,6 @@ import { noteSchema, NoteSchema } from "@/lib/validation";
 import { useAuth } from "../providers/AuthProvider";
 
 const gradeOptions = [
-  { value: "01", label: "Grade 01" },
-  { value: "02", label: "Grade 02" },
-  { value: "03", label: "Grade 03" },
   { value: "04", label: "Grade 04" },
   { value: "05", label: "Grade 05" },
   { value: "06", label: "Grade 06" },
@@ -143,6 +140,9 @@ export function UploadForm() {
         throw new Error("Unable to verify your session. Please log in again.");
       }
 
+      // Debug: Log token status (remove in production)
+      console.log("Upload attempt - Token obtained:", !!token, token.substring(0, 20) + "...");
+
       const formData = new FormData();
       formData.append("title", values.title);
       formData.append("description", values.description);
@@ -160,7 +160,18 @@ export function UploadForm() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error ?? "Upload failed");
+        const errorMessage = body.error ?? `Upload failed with status ${response.status}`;
+        
+        // Provide more specific error messages
+        if (response.status === 403) {
+          throw new Error(
+            errorMessage.includes("Authentication") 
+              ? errorMessage 
+              : "Authentication failed. Please log out and log in again, then try uploading."
+          );
+        }
+        
+        throw new Error(errorMessage);
       }
 
       setStatus("success");
