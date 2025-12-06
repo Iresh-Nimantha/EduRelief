@@ -13,7 +13,20 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization") ?? undefined;
-    const user = await verifyIdToken(authHeader);
+    
+    // Verify authentication first - return 403 for auth errors
+    let user;
+    try {
+      user = await verifyIdToken(authHeader);
+    } catch (authError) {
+      console.error("Auth error", authError);
+      return NextResponse.json(
+        {
+          error: authError instanceof Error ? authError.message : "Authentication required",
+        },
+        { status: 403 }
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get("file");

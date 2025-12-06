@@ -4,6 +4,7 @@ import { NoteGrid } from "@/components/notes/NoteGrid";
 import { SubjectsSection } from "@/components/layout/SubjectsSection";
 
 export default async function Home() {
+  // Fetch all notes, ordered by upload date (newest first)
   const notes = await listNotes();
 
   return (
