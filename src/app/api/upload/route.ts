@@ -12,17 +12,36 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization") ?? undefined;
+    const authHeader = request.headers.get("authorization");
+    
+    // Log for debugging (remove in production if needed)
+    console.log("Upload request - Auth header present:", !!authHeader);
+    console.log("Upload request - Auth header starts with Bearer:", authHeader?.startsWith("Bearer "));
     
     // Verify authentication first - return 403 for auth errors
     let user;
     try {
+      if (!authHeader) {
+        console.error("Upload error: No authorization header provided");
+        return NextResponse.json(
+          { error: "Authentication required. Please log in and try again." },
+          { status: 403 }
+        );
+      }
+      
       user = await verifyIdToken(authHeader);
+      console.log("Upload request - User authenticated:", user.uid);
     } catch (authError) {
-      console.error("Auth error", authError);
+      console.error("Auth error details:", {
+        error: authError instanceof Error ? authError.message : String(authError),
+        hasAuthHeader: !!authHeader,
+        authHeaderPrefix: authHeader?.substring(0, 20),
+      });
       return NextResponse.json(
         {
-          error: authError instanceof Error ? authError.message : "Authentication required",
+          error: authError instanceof Error 
+            ? authError.message 
+            : "Authentication failed. Please log in again.",
         },
         { status: 403 }
       );
